@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search>
+  <entry>
+    <title>利用 NPM 自动化 Git 提交：简化提交变更的流程</title>
+    <url>/20240624/ce8ea845cd19/</url>
+    <content><![CDATA[<p><strong>背景：</strong> 在完成一篇博客后，我们通常需要执行一系列命令：</p>
+<ol>
+<li>预览博客（可选）：<code>hexo clean &amp;&amp; hexo generate &amp;&amp; hexo server</code></li>
+<li>添加到暂存区：<code>git add .</code></li>
+<li>提交到本地仓库：<code>git commit -m &quot;update: 新博客 &#39;博客标题&#39; 提交时间&quot;</code></li>
+<li>推送到远程仓库：<code>git push</code></li>
+</ol>
+<p><strong>痛点：</strong> 这样的流程繁琐不说，还需要手动编写提交消息，涉及时间和博客标题等信息，不够规范，也容易出错。</p>
+<p><strong>解决方法：</strong> 通过编辑<code>package.json</code>文件，添加一个自定义的npm脚本，可以自动执行以上步骤，避免了手动编写提交消息，并且使得流程更规范化。</p>
+<div class="highlight-container" data-rel="Json"><figure class="iseeu highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;new&quot;</span><span class="punctuation">:</span> <span class="string">&quot;sh -c &#x27;post_name=$1 &amp;&amp; date=$(date \&quot;+%Y-%m-%d %H:%M:%S\&quot;) &amp;&amp; git add . &amp;&amp; git commit -m \&quot;update: 新博客 &#x27;\&quot;$post_name\&quot;&#x27; 提交时间 &#x27;\&quot;$date\&quot;&#x27;\&quot; &amp;&amp; git push&#x27; --&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<p><strong>Bug修复：</strong> <del>npm脚本过长导致阅读困难，进而导致编写错误和变量丢失</del>（修复时间：2024-06-24 21:21）<br>为了解决上述问题，我们将相关代码抽取至<code>blog_publish.sh</code>中：</p>
+<div class="highlight-container" data-rel="Shell"><figure class="iseeu highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">!/bin/bash</span></span><br><span class="line">post_name=$1</span><br><span class="line">if [ ! -n &quot;$post_name&quot; ]; then</span><br><span class="line">  echo &quot;Usage: $0 [post_name] or pnpm new [post_name]&quot;</span><br><span class="line">  exit 1</span><br><span class="line">fi</span><br><span class="line">date=$(date &quot;+%Y-%m-%d %H:%M:%S&quot;)</span><br><span class="line">git add .</span><br><span class="line">git commit -m &quot;update:新博客 \&quot;$post_name\&quot; 提交时间 \&quot;$date\&quot;&quot;</span><br><span class="line">git push</span><br></pre></td></tr></table></figure></div>
+
+<p>同时，我们对<code>package.json</code>进行如下修改：</p>
+<div class="highlight-container" data-rel="Json"><figure class="iseeu highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;scripts&quot;</span><span class="punctuation">:</span><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;new&quot;</span><span class="punctuation">:</span> <span class="string">&quot;bash blog_publish.sh&quot;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></div>
+
+<p>这段脚本设置了两个变量：<code>post_name</code>和<code>date</code>，其中<code>post_name</code>接收命令行参数，<code>date</code>是格式化后的当前时间。<br><strong>使用方法：</strong></p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm new [post_name]</span><br></pre></td></tr></table></figure></div>
+
+<p><strong>局限性：</strong> 该方法目前仅适用于Linux系统，Windows系统需要编写兼容性代码。</p>
+]]></content>
+      <tags>
+        <tag>npm</tag>
+        <tag>shell</tag>
+        <tag>git</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从零开始：开发环境搭建</title>
+    <url>/20240628/e7947259b53c/</url>
+    <content><![CDATA[<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
+<li>操作系统：Windows 11 23H2</li>
+<li>WSL：Ubuntu-24.04</li>
+</ul>
+<h2 id="Node-js"><a href="#Node-js" class="headerlink" title="Node.js"></a>Node.js</h2><p><a class="link"   href="https://nodejs.org/" >Node.js 官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a><br>我们可以参考官网提供的 <a class="link"   href="https://nodejs.org/zh-cn/download/package-manager" >软件包管理器 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 来安装和管理 Node.js</p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 安装 nvm (Node Version Manager)，卡在 =&gt; Cloning into &#x27;/root/.nvm&#x27;... 可以重新执行命令</span></span><br><span class="line">curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证 nvm 是否正确安装</span></span><br><span class="line">nvm -v <span class="comment"># 应该打印 0.39.7</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 为所有版本的 npm 设置镜像源</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;registry=https://registry.npmmirror.com&quot;</span> &gt;&gt; <span class="variable">$HOME</span>/.npmrc</span><br><span class="line"><span class="comment"># 可选：默认的 node 下载如果较慢的话，可以替换为国内的镜像源</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;export NVM_NODEJS_ORG_MIRROR=https://mirrors.ustc.edu.cn/node/&quot;</span> &gt;&gt; <span class="variable">$HOME</span>/.bashrc &amp;&amp; <span class="built_in">source</span> <span class="variable">$HOME</span>/.bashrc</span><br><span class="line"></span><br><span class="line">nvm <span class="built_in">ls</span> <span class="comment"># 列出已经安装的 node 版本</span></span><br><span class="line">nvm ls-remote <span class="comment"># 列出所有可以安装的 node 版本</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 下载和安装 Node.js (你需要重新打开一个终端)</span></span><br><span class="line">nvm install 20</span><br><span class="line"></span><br><span class="line"><span class="comment"># 设置默认的版本</span></span><br><span class="line">nvm <span class="built_in">alias</span> default [version]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证环境中的 Node.js 版本</span></span><br><span class="line">node -v <span class="comment"># 应该打印 `v20.15.0`</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证环境中的 npm 版本</span></span><br><span class="line">npm -v <span class="comment"># 应该打印 `10.7.0`</span></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h2><p>我们可以使用 <a class="link"   href="https://sdkman.io/" >sdkman <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 来安装和管理 Java 的多个版本</p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 安装需要的包，已安装的可以忽略</span></span><br><span class="line">apt install zip unzip -y</span><br><span class="line"></span><br><span class="line"><span class="comment"># 运行安装脚本</span></span><br><span class="line">curl -s <span class="string">&quot;https://get.sdkman.io&quot;</span> | bash &amp;&amp; <span class="built_in">source</span> <span class="string">&quot;<span class="variable">$HOME</span>/.sdkman/bin/sdkman-init.sh&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 验证是否安装成功</span></span><br><span class="line">sdk version <span class="comment"># 如果有报错，由于网络原因，可以多执行几次</span></span><br></pre></td></tr></table></figure></div>
+
+<p>安装各个版本的发行版<br>sdk install java [version]</p>
+<ul>
+<li>可以参考 <a class="link"   href="https://sdkman.io/jdks" >sdkman#jdks <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></li>
+<li>也可以运行 <code>sdk list java</code>，回车下一行，q 退出</li>
+</ul>
+<p>更多用法参考 <a class="link"   href="https://sdkman.io/usage" >sdkman#usage <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<h2 id="Maven"><a href="#Maven" class="headerlink" title="Maven"></a>Maven</h2><p>我们可以使用上述安装好的 sdkman 来安装 Maven<br>运行 <code>sdk list maven</code> 搜索可安装的版本<br>运行 <code>sdk install maven [version]</code> 安装指定的 maven 版本</p>
+<ul>
+<li>由于网络原因，我们也可以使用离线安装<br>访问 <a class="link"   href="https://maven.apache.org/" >maven 官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 下载安装包，我们也可以使用 <code>axel</code> 多线程下载，安装 <code>apt install axel -y</code></li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 下载</span></span><br><span class="line">axel -n 64 https://dlcdn.apache.org/maven/maven-3/3.9.8/binaries/apache-maven-3.9.8-bin.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="comment"># 解压</span></span><br><span class="line">tar -xzvf apache-maven-3.9.8-bin.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="comment"># 离线安装</span></span><br><span class="line">sdk install maven [version] [maven-home] <span class="comment"># version 可以自定义，maven-home 是 bin 的上一级目录</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 可选：离线安装需要设置默认的 maven</span></span><br><span class="line">sdk default maven [version]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 打开新的终端验证是否安装成功</span></span><br><span class="line">mvn -v</span><br><span class="line"></span><br><span class="line"><span class="comment"># 编辑指定 maven 版本的 settings.xml</span></span><br><span class="line">vim $(sdk home maven [version])/conf/settings.xml</span><br><span class="line"></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="Conda"><a href="#Conda" class="headerlink" title="Conda"></a>Conda</h2><p>通过Conda，用户可以轻松安装和管理多个版本的Python以及相关的软件包。为了保持轻量化，我们可以选择 <a class="link"   href="https://docs.anaconda.com/miniconda/" >Miniconda <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 从清华镜像站下载 Miniconda</span></span><br><span class="line">axel -n 64 https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda/Miniconda3-latest-Linux-x86_64.sh</span><br><span class="line"></span><br><span class="line"><span class="comment"># 执行. sh 文件</span></span><br><span class="line">bash Miniconda3-latest-Linux-x86_64.sh</span><br></pre></td></tr></table></figure></div>
+
+<p>首先提示浏览许可协议，按回车再输入 <code>q</code> 跳过，再输入 <code>yes</code> 允许即可，有条件的可以看一看<br>接着提示输入安装目录，默认 $HOME&#x2F;miniconda3<br>接着提示是否初始化 conda，输入 <code>yes</code>，这会在打开终端时自动进入 <code>base</code>conda 环境<br>如果想要关闭可以在 <code>base</code> 环境已激活时运行 <code>conda config --set auto_activate_base false</code></p>
+<blockquote>
+<p>注意：conda 官方不建议删除 <code>base</code> 环境<br>运行 <code>vim $HOME/.condarc</code>，修改 conda 配置</p>
+</blockquote>
+<div class="highlight-container" data-rel="Yaml"><figure class="iseeu highlight yaml"><table><tr><td class="code"><pre><span class="line"><span class="attr">auto_activate_base:</span> <span class="literal">false</span></span><br><span class="line"><span class="attr">channels:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">defaults</span></span><br><span class="line"><span class="attr">show_channel_urls:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">default_channels:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2</span></span><br><span class="line"><span class="attr">custom_channels:</span></span><br><span class="line">  <span class="attr">conda-forge:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">msys2:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">bioconda:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">menpo:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">pytorch:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">pytorch-lts:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">simpleitk:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud</span></span><br><span class="line">  <span class="attr">deepmodeling:</span> <span class="string">https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/</span></span><br></pre></td></tr></table></figure></div>
+
+<p>运行 <code>conda clean -i -y</code> 清除索引缓存，保证用的是镜像站提供的索引</p>
+<p>创建一个虚拟环境并激活，开始使用python吧</p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 创建虚拟环境</span></span><br><span class="line">conda create -n [env_name] python=[python_version] </span><br><span class="line"></span><br><span class="line"><span class="comment"># 激活虚拟环境</span></span><br><span class="line">conda activate [env_name] <span class="comment"># 退出：conda deactivate</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 使用python</span></span><br><span class="line">python -V</span><br></pre></td></tr></table></figure></div>
+
+<p>coming soon…</p>
+]]></content>
+      <tags>
+        <tag>kickoff</tag>
+        <tag>nodejs</tag>
+        <tag>java</tag>
+        <tag>maven</tag>
+        <tag>conda</tag>
+        <tag>python</tag>
+        <tag>wsl</tag>
+        <tag>windows</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>farm 初体验：据说比 Vite 还要快？</title>
+    <url>/20240629/a5b45668caeb/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><code>vite</code>可以根据指定的模板帮我们创建一个项目，并且快速启动，但是呢，它创建的那些文件，我却从来没有关注过。最近看到一篇帖子说是有一个工具叫<code>farm</code>，它比更快的<code>vite</code>还要更快，于是借着体验<code>farm</code>和<code>vim</code>的机会，来手搓一个 vue 项目，研究每一个文件都是干嘛的。</p>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><p>参考 <a class="link"   href="https://www.farmfe.org/" >farm官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> <a class="link"   href="https://cn.vuejs.org/" >vue官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<p>回忆以往的 vue 项目结构，我们需要创建以下文件：</p>
+<p><code>package.json</code>：<br>安装相关依赖，参考 <a class="link"   href="https://cn.vitejs.dev/plugins/" >vite#plugins <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">pnpm add vue &amp;&amp; pnpm add -D @vitejs/plugin-vue @farmfe/cli @farmfe/core</span><br></pre></td></tr></table></figure></div>
+<p>现在<code>package.json</code>文件是这样的：</p>
+<div class="highlight-container" data-rel="Json"><figure class="iseeu highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">  <span class="attr">&quot;dependencies&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;vue&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^3.4.31&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span><span class="punctuation">,</span></span><br><span class="line">  <span class="attr">&quot;devDependencies&quot;</span><span class="punctuation">:</span> <span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;@farmfe/cli&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^1.0.2&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;@farmfe/core&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^1.2.4&quot;</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">&quot;@vitejs/plugin-vue&quot;</span><span class="punctuation">:</span> <span class="string">&quot;^5.0.5&quot;</span></span><br><span class="line">  <span class="punctuation">&#125;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></div>
+<p>然后添加一个脚本块<code>&quot;scripts&quot;:&#123;&quot;dev&quot;:&quot;farm start&quot;&#125;</code><br>再添加<code>&quot;type&quot;:&quot;module&quot;</code>，这个不添加会报错，因为它的默认值是 commonjs。<br>现在我们创建<code>farm.config.ts</code>：这个是 farm 的配置文件，类似于<code>vite.config.ts</code></p>
+<div class="highlight-container" data-rel="Typescript"><figure class="iseeu highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; <span class="title class_">UserConfig</span> &#125; <span class="keyword">from</span> <span class="string">&quot;@farmfe/core&quot;</span></span><br><span class="line"><span class="keyword">import</span> vue <span class="keyword">from</span> <span class="string">&quot;@vitejs/plugin-vue&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 关于这个 defineConfig，我认为应该是为了区分 vite 吧，不然只需要按照 vite 那样导出 defineConfig 函数就好了</span></span><br><span class="line"><span class="comment">// 更新：在浏览官方文档时，注意到其实是有 defineConfig 函数导出的</span></span><br><span class="line"><span class="keyword">function</span> <span class="title function_">defineConfig</span>(<span class="params">config: UserConfig</span>)&#123;</span><br><span class="line">	<span class="keyword">return</span> config;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">export</span> <span class="keyword">default</span> <span class="title function_">defineConfig</span>(&#123;</span><br><span class="line">  <span class="attr">compilation</span>: &#123;</span><br><span class="line">    <span class="attr">input</span>: &#123;</span><br><span class="line">      <span class="attr">index</span>: <span class="string">&quot;./index.html&quot;</span></span><br><span class="line">    &#125;,</span><br><span class="line">    <span class="attr">output</span>: &#123;</span><br><span class="line">      <span class="attr">path</span>: <span class="string">&quot;build&quot;</span>,</span><br><span class="line">      <span class="attr">publicPath</span>: <span class="string">&quot;/&quot;</span>,</span><br><span class="line">      <span class="attr">targetEnv</span>: <span class="string">&quot;browser&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;,</span><br><span class="line">	<span class="comment">// 这里要注意的是，因为 farm 还没有完全适配 vue，所以只能暂时使用 vite 的插件，而 vite 的插件要配置在这里</span></span><br><span class="line">  <span class="attr">vitePlugins</span>: [</span><br><span class="line">    <span class="title function_">vue</span>()</span><br><span class="line">  ]</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure></div>
+<p>然后是<code>index.html</code>，总入口文件，省的打那么多字，就直接最小化了：</p>
+<div class="highlight-container" data-rel="Html"><figure class="iseeu highlight html"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span> <span class="comment">&lt;!-- 这里不声明为 html 会报错，不是很理解，按理来说没有这个浏览器也会识别 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">&quot;app&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">div</span>&gt;</span> <span class="comment">&lt;!-- 定义一个 div，我们的 vue 容器就挂载在这里 --&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">script</span> <span class="attr">type</span>=<span class="string">&quot;module&quot;</span> <span class="attr">src</span>=<span class="string">&quot;./main.ts&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">script</span>&gt;</span> <span class="comment">&lt;!-- 有一个好笑的是，用习惯了 vscode 的自动补全，这里的 script 标签没有收尾报错了，哈哈。。 --&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure></div>
+<p>然后是<code>main.ts</code>，这个作用是把创建 vue 实例的过程抽取出来，也可以写在<code>&lt;script&gt;</code>里面</p>
+<div class="highlight-container" data-rel="Typescript"><figure class="iseeu highlight typescript"><table><tr><td class="code"><pre><span class="line"><span class="keyword">import</span> &#123; createApp &#125; <span class="keyword">from</span> <span class="string">&quot;vue&quot;</span></span><br><span class="line"><span class="keyword">import</span> <span class="title class_">App</span> <span class="keyword">from</span> <span class="string">&quot;./App.vue&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> app = <span class="title function_">createApp</span>(<span class="title class_">App</span>)</span><br><span class="line"></span><br><span class="line">app.<span class="title function_">mount</span>(<span class="string">&quot;#app&quot;</span>)</span><br></pre></td></tr></table></figure></div>
+<p>然后是<code>App.vue</code>，这个是 vue 的组件，我们可以在这里面写 vue 的语法，为了简单就只写<code>&lt;template&gt;</code>，这个标签是必须的</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">&lt;template&gt;</span><br><span class="line">I&#x27;m the best!</span><br><span class="line">&lt;template&gt;</span><br></pre></td></tr></table></figure></div>
+<p>现在我们有以下文件：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── App.vue</span><br><span class="line">├── farm.config.ts</span><br><span class="line">├── index.html</span><br><span class="line">├── main.ts</span><br><span class="line">├── node_modules</span><br><span class="line">├── package.json</span><br><span class="line">└── pnpm-lock.yaml</span><br></pre></td></tr></table></figure></div>
+<p>运行<code>pnpm dev</code>，一次成功（并不是</p>
+<p>我们现在修改<code>package.json</code>添加以下脚本：</p>
+<div class="highlight-container" data-rel="Json"><figure class="iseeu highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;build&quot;</span><span class="punctuation">:</span> <span class="string">&quot;farm build&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></div>
+<p>执行<code>pnpm build</code>发现报了一个错，其中一句话是这样写的：<br><code>The file that `core-js/modules/es.symbol.description.js` points to does not exist.</code><br>提取一下关键字就会发现，core-js 的啥啥啥不存在，搜索发现<code>core-js</code>可以快速实现<code>polyfill</code><br>那么<code>polyfill</code>又是啥呢？继续搜索，它是可以将现代的 web 特性在老旧的浏览器中得以正常运行的工具<br>所以我们安装一下<code>pnpm add -D core-js</code>，再执行<code>pnpm build</code>，目录下多了个<code>build</code>文件夹：</p>
+<div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">.</span><br><span class="line">├── build</span><br><span class="line">│   ├── index.html</span><br><span class="line">│   ├── index_31d2.02b1796b.js</span><br><span class="line">│   ├── index_4260.169e2276.js</span><br><span class="line">│   ├── index_9beb.c395067c.js</span><br><span class="line">│   ├── index_e1ee.dab66b54.js</span><br><span class="line">│   └── index_e1ee.dab66b54.js.map</span><br></pre></td></tr></table></figure></div>
+<p>我们还可以添加这段脚本在本地创建一个服务器用来预览：</p>
+<div class="highlight-container" data-rel="Json"><figure class="iseeu highlight json"><table><tr><td class="code"><pre><span class="line"><span class="punctuation">&#123;</span></span><br><span class="line">    <span class="attr">&quot;preview&quot;</span><span class="punctuation">:</span> <span class="string">&quot;farm preview&quot;</span></span><br><span class="line"><span class="punctuation">&#125;</span></span><br></pre></td></tr></table></figure></div>
+<p>运行<code>pnpm preview</code>，发现成功运行了，通过浏览器的 devtools 观察，运行的是 build 文件夹的内容</p>
+<p>之后的内容和 vite 项目开发大差不差了</p>
+]]></content>
+      <tags>
+        <tag>node</tag>
+        <tag>farm</tag>
+        <tag>vite</tag>
+        <tag>vue</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从零开始：在 WSL 上编译安装 MySQL</title>
+    <url>/20240627/d80381243020/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>社区里有个话题很有意思，讨论的是像 MySQL 这样的有状态应用是否应该使用 Docker 来部署。一方认为 Docker 部署方便，运行环境隔离更安全，而且数据也可以挂载到外部。另一方则认为 Docker 在 IO 性能上存在瓶颈，Docker 本质上是为无状态应用设计的。两方的观点都有道理，我认为需要具体情况具体分析。如果是本地开发和学习，用 Docker 部署是可以的，但在生产环境中，还是建议部署在裸金属服务器上。因此，我打算在 WSL 上编译安装 MySQL，看看实际操作有多不便，性能提升又能有多少。</p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
+<li>操作系统：Windows 11 23H2</li>
+<li>CPU：i5-1135G7 2.40GHz</li>
+<li>内存：DDR4 3200MHz 32GB</li>
+<li>WSL：Ubuntu 24.04</li>
+</ul>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>参考 <a class="link"   href="https://dev.mysql.com/doc/refman/8.4/en/source-installation.html" >MySQL 官方文档 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></p>
+<h3 id="先决条件"><a href="#先决条件" class="headerlink" title="先决条件"></a>先决条件</h3><p>安装依赖</p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">apt install build-essential cmake bison libncurses-dev axel -y</span><br></pre></td></tr></table></figure></div>
+
+<p>准备好 Boost C++ 库</p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">axel -n 64 https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.gz</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;be0d91732d5b0cc6fbb275c7939974457e79b54d6f07ce2e3dfdd68bef883b0  boost_1_85_0.tar.gz&quot;</span> &gt; sha256.txt <span class="comment"># sha256 值来自官网</span></span><br><span class="line"><span class="built_in">sha256sum</span> -c sha256.txt <span class="comment"># boost_1_85_0.tar.gz: OK</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="下载源码"><a href="#下载源码" class="headerlink" title="下载源码"></a>下载源码</h3><div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/local/src &amp;&amp; axel -n 64 https://dev.mysql.com/get/Downloads/MySQL-8.4/mysql-8.4.0.tar.gz</span><br><span class="line"><span class="built_in">echo</span> <span class="string">&quot;c3b1ccd1ba5b09f118ce6e27f0f0df98  mysql-8.4.0.tar.gz&quot;</span> &gt; md5.txt <span class="comment"># md5 值来自官网</span></span><br><span class="line"><span class="built_in">md5sum</span> -c md5.txt <span class="comment"># mysql-8.4.0.tar.gz: OK</span></span><br></pre></td></tr></table></figure></div>
+
+<h3 id="编译和安装"><a href="#编译和安装" class="headerlink" title="编译和安装"></a>编译和安装</h3><p>解压并打开文件夹：<code>tar -xzf mysql-8.4.0.tar.gz &amp;&amp; cd mysql-8.4.0</code></p>
+<blockquote>
+<p>MySQL：Build outside of the source tree to keep the tree clean. 为了保持源码树的整洁，请在源码树之外进行构建。</p>
+</blockquote>
+<p>创建一个空的文件夹并切换：<code>mkdir bld &amp;&amp; cd bld</code><br>配置构建目录：<code>cmake ..</code><br>开始编译和安装：<code>make -j $(nproc) &amp;&amp; make install -j $(nproc)</code></p>
+]]></content>
+      <tags>
+        <tag>kickoff</tag>
+        <tag>wsl</tag>
+        <tag>windows</tag>
+        <tag>mysql</tag>
+        <tag>make</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>从零开始：在 WSL 上编译安装 Nginx，配置 HTTPS 访问</title>
+    <url>/20240625/c2b0cfa83d1f/</url>
+    <content><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>为了练习管理服务器，我打算在自己的电脑上模拟一个企业级内部环境。通过调整 hosts 文件或者内部 DNS 服务器设置，我希望能够使用内部域名访问服务器，而且要求使用 HTTPS 进行访问。为此，我选择在 Windows11 上安装 WSL2，并在 WSL2 中编译安装 Nginx，以实现最大程度的自定义配置。</p>
+<h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
+<li>操作系统：Windows 11 23H2</li>
+<li>终端：PowerShell 5.1</li>
+</ul>
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><h3 id="1-安装-wsl"><a href="#1-安装-wsl" class="headerlink" title="1. 安装 wsl"></a>1. 安装 wsl</h3><p>参考微软 <a class="link"   href="https://learn.microsoft.com/zh-cn/windows/wsl" >WSL 官方文档 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>。</p>
+<ul>
+<li>在线安装：运行 <code>wsl --list --online</code> 或者 <code>wsl -l -o</code> 查看可安装的有效分发的列表，然后运行 <code>wsl --install &lt;Distribution Name&gt;</code>。</li>
+</ul>
+<blockquote>
+<p>注意：这里的 <code>&lt;Distribution Name&gt;</code> 是运行 <code>wsl -l -o</code> 后左列的 <code>NAME</code> 而不是右列的 <code>FRIENDLY NAME</code></p>
+</blockquote>
+<ul>
+<li>离线安装：由于网络环境的关系，可以选择 <a class="link"   href="https://learn.microsoft.com/zh-cn/windows/wsl/install-manual#downloading-distributions" >下载安装包 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 进行离线安装。下载好安装包之后，双击安装包开始安装。<br>稍等片刻后，终端会提示你输入一个非 root 的用户名和两次相同的密码，输入完毕会自动以你输入的用户登录 Linux。</li>
+<li>更改安装目录：因为 WSL 的默认安装位置在 C 盘，随着各种操作，WSL 的虚拟磁盘会越来越大，所以我们打开一个新的 PowerShell 终端，依次输入以下命令：</li>
+</ul>
+<div class="highlight-container" data-rel="Powershell"><figure class="iseeu highlight powershell"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 这里的 &lt;Distribution Name&gt; 是运行 wsl -l -v 的 name</span></span><br><span class="line"><span class="comment"># 关闭所有正在运行的 Linux 发行版</span></span><br><span class="line">&gt; wsl <span class="literal">--shutdown</span></span><br><span class="line"><span class="comment"># &lt;FileName&gt; 导出的文件名，可以是绝对路径</span></span><br><span class="line">&gt; wsl <span class="literal">--export</span> &lt;Distribution Name&gt; &lt;FileName&gt;</span><br><span class="line"><span class="comment"># 此命令会删除指定 Linux 的所有内容，注意备份重要文件！</span></span><br><span class="line">&gt; wsl <span class="literal">--unregister</span> &lt;Distribution Name&gt;</span><br><span class="line"><span class="comment"># 1: 允许自定义，如：ubuntu-dev，2: 发行版虚拟磁盘路径，建议放在大容量盘，3: 导出文件的路径</span></span><br><span class="line">&gt; wsl <span class="literal">--import</span> &lt;Distribution Name&gt; &lt;InstallLocation&gt; &lt;FileName&gt;</span><br><span class="line"><span class="comment"># 设置默认启动的 Linux 发行版</span></span><br><span class="line">&gt; wsl <span class="literal">--set-default</span> &lt;Distribution Name&gt;</span><br></pre></td></tr></table></figure></div>
+
+<p>运行 <code>wsl [path]</code> 以 root 用户登录默认启动的 Linux 发行版，<code>[path]</code> 参数是登录后打开的目录。</p>
+<ul>
+<li>可选：更换软件镜像源<br>以 Ubuntu-24.04 为例：新版的 Debian 和 Ubuntu 采用了 <a class="link"   href="https://repolib.readthedocs.io/en/latest/deb822-format.html" >DEB822 格式 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>，运行以下命令更换更快速的镜像源：</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 备份</span></span><br><span class="line"><span class="built_in">cp</span> /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak</span><br><span class="line"><span class="comment"># -i 表示直接在文件中进行替换操作 s 表示替换操作 @分隔符，默认 / 作为分隔符，但在处理 url 时为了避免冲突，可以使用其他字符 //.*archive.ubuntu.com 匹配模式，表示匹配以 // 开头，后面跟着任意字符直到 ubuntu.com 的字符串 //[domain] 表示 // 开头，[domain] 镜像源的域名，注意：不包含路径 g 表示全局替换 [file-path] 表示要操作的文件，DEB822 格式以. sources 结尾</span></span><br><span class="line">sed -i <span class="string">&#x27;s@//.*ubuntu.com@//[domain]@g&#x27;</span> [file-path]</span><br><span class="line"><span class="comment"># 默认的源采用的是 http 而不是 https，使用 https 避免运营商的缓存劫持</span></span><br><span class="line">sed -i <span class="string">&#x27;s/http:/https:/g&#x27;</span> [file-path]</span><br><span class="line"><span class="comment"># 更新索引</span></span><br><span class="line">apt-get update</span><br></pre></td></tr></table></figure></div>
+
+<h3 id="2-安装编译工具"><a href="#2-安装编译工具" class="headerlink" title="2. 安装编译工具"></a>2. 安装编译工具</h3><div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">apt update &amp;&amp; apt install build-essential zlib1g zlib1g-dev libgd-dev libgdal-dev libpcre3 libpcre3-dev -y</span><br></pre></td></tr></table></figure></div>
+
+<blockquote>
+<p>有位不知名大佬推荐安装两遍编译工具，使最后显示 <code>0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.</code>，这样做是为了避免在编译和安装过程中出现由于依赖项未满足导致的错误。（有人知道出处的话请联系我更新）</p>
+</blockquote>
+<h3 id="3-更新-openssl-版本（可选）"><a href="#3-更新-openssl-版本（可选）" class="headerlink" title="3. 更新 openssl 版本（可选）"></a>3. 更新 openssl 版本（可选）</h3><blockquote>
+<p>来自 <a class="link"   href="https://www.openssl.org/source/" >openssl 官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>：All older versions (including 1.1.1, 1.1.0, 1.0.2, 1.0.0 and 0.9.8) are now out of support and should not be used. Users of these older versions are encouraged to upgrade to 3.2 or 3.0 as soon as possible. 所有旧版本（包括 1.1.1、1.1.0、1.0.2、1.0.0 和 0.9.8）现在都不再支持，不应再使用。使用这些旧版本的用户应尽快升级到 3.2 或 3.0。</p>
+</blockquote>
+<ul>
+<li>访问 <a class="link"   href="https://openssl.org/" >openssl 官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a> 下载并解压源码</li>
+<li>指定安装路径，以下的 <code>[path]</code> 需保持一致</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">./config --prefix=`[path]`</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>开始多线程编译安装</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">make -j $(<span class="built_in">nproc</span>) &amp;&amp; make install -j $(<span class="built_in">nproc</span>)</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>添加新版本 openssl 软连接</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">ln</span> -s `[path]`/bin/openssl /usr/bin/openssl</span><br><span class="line"><span class="built_in">ln</span> -s `[path]`/include/openssl /usr/include/openssl</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>新的库文件地址写入记录 so 库的配置文件中</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;[path]/lib64&quot;</span> &gt;&gt; /etc/ld.so.conf</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>使配置生效并打印出来。</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">ldconfig -v</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>查看版本是否更新</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">openssl version</span><br></pre></td></tr></table></figure></div>
+
+<h2 id="编译安装-Nginx"><a href="#编译安装-Nginx" class="headerlink" title="编译安装 Nginx"></a>编译安装 Nginx</h2><p>以下使用 <code>/usr/local/src/</code> 存放源代码，使用 <code>/usr/local/nginx</code> 存放安装路径</p>
+<ul>
+<li>创建一个 nginx 用户，为了降低服务器风险，让 nginx 以最小的权限运行</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">useradd -s /sbin/nologin nginx <span class="comment"># 删除用户及其用户目录 userdel -r username</span></span><br></pre></td></tr></table></figure></div>
+
+<blockquote>
+<p>查看所有登录 shell 不为 &#x2F; sbin&#x2F;nologin 或 &#x2F; bin&#x2F;false 用户：grep -vE ‘&#x2F;sbin&#x2F;nologin|&#x2F;bin&#x2F;false’ &#x2F;etc&#x2F;passwd</p>
+</blockquote>
+<ul>
+<li>下载 nginx 源码<br>访问 <a class="link"   href="https://nginx.org/en/download.html" >nginx 下载页面 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>，复制下载链接运行以下命令：</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">wget https://nginx.org/download/nginx-x.x.x.tar.gz <span class="comment"># x.x.x 为具体的版本号</span></span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>解压 nginx 源码</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">tar -xzf nginx-x.x.x.tar.gz <span class="comment"># x 表示提取 z 表示使用 gzip（通常用户. tar.gz 或. tgz 文件） f 表示指定要操作的文件 v 可选：表示显示详细的操作信息</span></span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>运行 configure 配置脚本<br>以下配置项参考 <a class="link"   href="https://nginx.org/en/docs/configure.html" >nginx 文档 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a></li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">./configure --prefix=/usr/local/nginx --user=nginx --group=nginx --with-http_ssl_module <span class="comment">#设置安装路径 设置用户 设置用户组 添加 https 支持</span></span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>编译和安装</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">make -j$(<span class="built_in">nproc</span>) &amp;&amp; make install -j$(<span class="built_in">nproc</span>) <span class="comment"># 自动最大线程编译安装</span></span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>启动和验证</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/local/nginx/sbin &amp;&amp; ./nginx <span class="comment">#启动</span></span><br><span class="line">./nginx -t <span class="comment"># 验证配置文件</span></span><br><span class="line">./nginx -v <span class="comment"># 查看版本</span></span><br><span class="line">curl http://localhost <span class="comment"># 访问默认页面，启动成功会回显 nginx 欢迎页面的 html 响应</span></span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li><p>其他配置</p>
+<ul>
+<li>使用软链接将 nginx 添加到系统的可执行路径中</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">ln</span> -s /usr/local/nginx/sbin/nginx /usr/bin/nginx</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>编写 &#x2F; usr&#x2F;lib&#x2F;systemd&#x2F;system&#x2F;nginx.service，使用 systemctl 管理 nginx</li>
+</ul>
+</li>
+</ul>
+<p>参考 <a class="link"   href="https://systemd.io/" >systemd 官网 <i class="fa-regular fa-arrow-up-right-from-square fa-sm"></i></a>，man 手册 (man systemd.unit)</p>
+  <div class="highlight-container" data-rel="Plaintext"><figure class="iseeu highlight plaintext"><table><tr><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=nginx - high performance web server</span><br><span class="line">Documentation=http://nginx.org/en/docs/</span><br><span class="line">After=network.target remote-fs.target nss-lookup.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=forking</span><br><span class="line">PIDFile=/usr/local/nginx/logs/nginx.pid</span><br><span class="line">ExecStartPre=/usr/local/nginx/sbin/nginx -t -c /usr/local/nginx/conf/nginx.conf</span><br><span class="line">ExecStart=/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf</span><br><span class="line">ExecReload=/usr/local/nginx/sbin/nginx -s reload</span><br><span class="line">ExecStop=/usr/local/nginx/sbin/nginx -s stop</span><br><span class="line">PrivateTmp=true</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>验证 nginx 是否正常运行：</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">systemctl daemon-reload &amp;&amp; systemctl stop nginx.service &amp;&amp; systemctl start nginx.service &amp;&amp; systemctl reload nginx.service &amp;&amp; systemctl restart nginx.service &amp;&amp; systemctl status nginx <span class="comment"># 应显示 Active: active (running) 开机自启（可选）：systemctl enable nginx</span></span><br></pre></td></tr></table></figure></div>
+
+<h2 id="配置-HTTPS-访问"><a href="#配置-HTTPS-访问" class="headerlink" title="配置 HTTPS 访问"></a>配置 HTTPS 访问</h2><ul>
+<li><p>生成 SSL 证书</p>
+<ul>
+<li>创建.openssl文件夹保存相关文件</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> .openssl &amp;&amp; <span class="built_in">cd</span> .openssl</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>生成根 CA 的私钥和证书</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 生成根 CA 的私钥</span></span><br><span class="line">openssl genrsa -out rootCA.key 4096</span><br><span class="line"><span class="comment"># 使用私钥生成根 CA 的证书，依次输入国家代码（两个大写字母）、省、市、公司、部门、域名、邮箱</span></span><br><span class="line">openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 30 -out rootCA.crt</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>为域名生成私钥和证书请求文件（CSR）</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="comment"># 生成签发证书的私钥 [domain]替换为自己的域名</span></span><br><span class="line">openssl genrsa -out [domain].key 4096</span><br><span class="line"><span class="comment"># 使用私钥生成证书请求文件，依次输入国家代码（两个大写字母）、省、市、公司、部门、域名（可以是泛域名[*.domain]）、邮箱、密码（可以为空，不推荐）</span></span><br><span class="line">openssl req -new -key [domain].key -out [domain].csr</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>创建证书扩展文件<br>运行<code>vim v3.ext</code>并添加以下内容</li>
+</ul>
+<div class="highlight-container" data-rel="Ini"><figure class="iseeu highlight ini"><table><tr><td class="code"><pre><span class="line"><span class="attr">authorityKeyIdentifier</span>=keyid,issuer</span><br><span class="line"><span class="attr">basicConstraints</span>=CA:<span class="literal">FALSE</span></span><br><span class="line"><span class="attr">keyUsage</span> = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment</span><br><span class="line"><span class="attr">subjectAltName</span> = @alt_names</span><br><span class="line"></span><br><span class="line"><span class="section">[alt_names]</span></span><br><span class="line"><span class="comment"># 这里 DNS 替换成 IP 就可以签名ip了，[domain]替换为自己的域名</span></span><br><span class="line"><span class="attr">DNS.1</span> = [domain]</span><br><span class="line"><span class="attr">DNS.2</span> = [*.domain]</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>使用根 CA 的证书为域名签名证书</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">openssl x509 -req -<span class="keyword">in</span> [domain].csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out [domain].crt -days 30 -sha256 -extfile v3.ext</span><br></pre></td></tr></table></figure></div>
+</li>
+<li><p>修改 Nginx 配置文件</p>
+<ul>
+<li>将[domain].crt和[domain].key复制到[ssl-path]<br>cp [domain].crt [domain].key [ssl-path]</li>
+<li>推荐在[nginx-home]&#x2F;conf文件夹下创建一个<code>servers</code>文件夹，然后修改nginx.conf，在http块内添加<code>include servers/*.conf</code></li>
+<li>在<code>servers</code>文件夹下创建<code>80.conf</code>，强制使用https</li>
+</ul>
+<div class="highlight-container" data-rel="Ini"><figure class="iseeu highlight ini"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">  listen 80<span class="comment">;</span></span><br><span class="line">  server_name _<span class="comment">;</span></span><br><span class="line"></span><br><span class="line">  return 301 https://$host$request_uri<span class="comment">;</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>在<code>servers</code>文件夹下创建<code>443.conf</code></li>
+</ul>
+<div class="highlight-container" data-rel="Ini"><figure class="iseeu highlight ini"><table><tr><td class="code"><pre><span class="line">server &#123;</span><br><span class="line">  listen 443 ssl<span class="comment">;</span></span><br><span class="line">  server_name <span class="section">[domain]</span><span class="comment">;</span></span><br><span class="line"></span><br><span class="line">  ssl_certificate <span class="section">[ssl-path]</span>/<span class="section">[domain]</span>.crt</span><br><span class="line">  ssl_certificate_key <span class="section">[ssl-path]</span>/<span class="section">[domain]</span>.key</span><br><span class="line"></span><br><span class="line">  <span class="comment"># location配置</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div>
+
+<p>验证nginx配置文件和重启nginx使配置文件生效</p>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line">nginx -t &amp;&amp; nginx -s reload</span><br></pre></td></tr></table></figure></div>
+</li>
+<li><p>安装根证书</p>
+<ul>
+<li>Ubuntu</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cp</span> rootCA.crt /usr/local/share/ca-certificates</span><br><span class="line">update-ca-certificates</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>CentOS</li>
+</ul>
+<div class="highlight-container" data-rel="Bash"><figure class="iseeu highlight bash"><table><tr><td class="code"><pre><span class="line"><span class="built_in">cp</span> rootCA.crt /etc/pki/ca-trust/source/anchors/</span><br><span class="line">update-ca-trust</span><br></pre></td></tr></table></figure></div>
+
+<ul>
+<li>Windows<br>右键<code>rootCA.crt</code>，选择<code>安装证书</code>，选择<code>个人用户</code>或者<code>本地计算机</code>，选择将所有的证书都放入下列存储，指定安装到受信任的根证书颁发机构，点击确定，提示安全警告，阅读完毕选择<code>是</code>，提示导入成功就可以了</li>
+</ul>
+</li>
+</ul>
+]]></content>
+      <tags>
+        <tag>kickoff</tag>
+        <tag>wsl</tag>
+        <tag>windows</tag>
+        <tag>make</tag>
+        <tag>nginx</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>记一次 nodejieba 安装不上的解决思路</title>
+    <url>/20240629/c6963d3260b4/</url>
+    <content><![CDATA[<ul>
+<li><p>前言<br><code>nodejieba</code>是一个基于 Node.js 的中文分词模块，用于将中文文本切分成有意义的词汇，本博客的推荐阅读模块采用的就是<code>nodejieba@2.6.0</code>。<br>我在一次使用<code>geek uninstaller</code>卸载软件时，不小心双击了 wsl 的系统（这也是 geek 这个软件的一个缺点，双击直接就卸载了，没有给出一个提示确认框），导致我存放博客项目的 wsl 数据全部丢失了。</p>
+</li>
+<li><p>正文<br>长话短说，总之经历了重装系统，重装 wsl，重新 clone 博客项目，准备<code>npm install</code>时，意外发生了，<code>nodejieba</code>报了一堆的错（当时急着解决问题所以没有截图），当时查看报错内容，<code>nodejieba</code>尝试从 Github 上下载一些包，于是我认为是网络原因所以打开了<del>软件</del>。<br>发现下载是能下载了，又报了另一种错误，然后我就把<code>nodejieba安装不上</code>作为关键词在搜索引擎上搜索，找了好一会儿看到了<code>Python</code>这个字眼，于是我就在想：是不是<code>nodejieba</code>需要借助 Python 来运行，当我安装好 Python 后，不出意料的还是报错了。<br>当时就给我气笑了，我就漫无目的的在搜索引擎上面逛着，终于在看到一篇博客上面<code>编译</code>和<code>C++</code>字眼时，我看到了希望，尝试运行<code>apt install build-essential</code>安装编译工具，再次安装<code>nodejieba</code>，居然就安装成功了，而且也不是什么网络原因。</p>
+</li>
+<li><p>总结</p>
+<ol>
+<li><code>nodejieba</code>采用 C++ 编写，安装时需要有 C++ 的编译环境</li>
+<li>程序都是人编写的，遇到报错不要急，一定有办法解决</li>
+<li>在解决报错的过程中，要随手记录，哪怕方法是错误的</li>
+<li>引用一个工具时，一定要看文档，哪怕只是扫一眼</li>
+</ol>
+</li>
+</ul>
+]]></content>
+      <tags>
+        <tag>npm</tag>
+        <tag>node</tag>
+        <tag>nodejieba</tag>
+      </tags>
+  </entry>
+</search>
